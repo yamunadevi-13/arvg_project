@@ -1,3 +1,4 @@
+
 import * as THREE from 'three';
 import * as dat from 'dat.gui';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -7,18 +8,18 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 
-import bgTexture1 from '/images/1.jpg';
-import bgTexture2 from '/images/2.jpg';
 import bgTexture3 from '/images/3.jpg';
-import bgTexture4 from '/images/4.jpg';
-import sunTexture from '/images/sun.jpg';
+import bgTexture4 from '/images/2.jpg';
+import bgTexture2 from '/images/4.jpg';
+import bgTexture5 from '/images/1.jpg';
+import sunTexture from '/images/sun2.jpg';
 import mercuryTexture from '/images/mercurymap.jpg';
 import mercuryBump from '/images/mercurybump.jpg';
 import venusTexture from '/images/venusmap.jpg';
 import venusBump from '/images/venusmap.jpg';
 import venusAtmosphere from '/images/venus_atmosphere.jpg';
 import earthTexture from '/images/earth_daymap.jpg';
-import earthNightTexture from '/images/earth_nightmap.jpg';
+import earthNightTexture from '/images/earth-at-night2.jpeg';
 import earthAtmosphere from '/images/earth_atmosphere.jpg';
 import earthMoonTexture from '/images/moonmap.jpg';
 import earthMoonBump from '/images/moonbump.jpg';
@@ -34,15 +35,17 @@ import satRingTexture from '/images/saturn_ring.png';
 import uranusTexture from '/images/uranus.jpg';
 import uraRingTexture from '/images/uranus_ring.png';
 import neptuneTexture from '/images/neptune.jpg';
+import moonTexture from '/images/neptune.jpg'
 import plutoTexture from '/images/plutomap.jpg';
+
 
 // ******  SETUP  ******
 console.log("Create the scene");
 const scene = new THREE.Scene();
 
 console.log("Create a perspective projection camera");
-var camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 1000 );
-camera.position.set(-175, 115, 5);
+var camera = new THREE.PerspectiveCamera( 50, window.innerWidth/window.innerHeight, 0.1, 1000 );
+camera.position.set(550, 110, 15);
 
 console.log("Create the renderer");
 const renderer = new THREE.WebGL1Renderer();
@@ -80,18 +83,19 @@ composer.addPass(bloomPass);
 
 // ****** AMBIENT LIGHT ******
 console.log("Add the ambient light");
-var lightAmbient = new THREE.AmbientLight(0x222222, 6); 
+var lightAmbient = new THREE.AmbientLight(0x222222, 8); 
 scene.add(lightAmbient);
+
+scene.background = new THREE.Color(0xffffff);  // Set the background to white
 
 // ******  Star background  ******
 scene.background = cubeTextureLoader.load([
-
-  bgTexture3,
-  bgTexture1,
-  bgTexture2,
-  bgTexture2,
-  bgTexture4,
-  bgTexture2
+  bgTexture3,  // Positive X
+  bgTexture2,  // Negative X
+  bgTexture3,  // Positive Y
+  bgTexture2,  // Negative Y
+  bgTexture5,  // Positive Z
+  bgTexture4   // Negative Z
 ]);
 
 // ******  CONTROLS  ******
@@ -103,7 +107,7 @@ customContainer.appendChild(gui.domElement);
 const settings = {
   accelerationOrbit: 1,
   acceleration: 1,
-  sunIntensity: 1.9
+  sunIntensity: 5
 };
 
 gui.add(settings, 'accelerationOrbit', 0, 10).onChange(value => {
@@ -177,7 +181,7 @@ function identifyPlanet(clickedObject) {
           offset = 50;
           return jupiter;
         } else if (clickedObject.material === saturn.planet.material) {
-          offset = 50;
+          offset = 5;
           return saturn;
         } else if (clickedObject.material === uranus.planet.material) {
           offset = 25;
@@ -301,8 +305,8 @@ function createPlanet(planetName, size, position, tilt, texture, bump, ring, atm
     Ring.rotation.y = -tilt * Math.PI / 180;
   }
   
-  //add atmosphere
-  if(atmosphere){
+   //add atmosphere
+   if(atmosphere){
     const atmosphereGeom = new THREE.SphereGeometry(size+0.1, 32, 20);
     const atmosphereMaterial = new THREE.MeshPhongMaterial({
       map:loadTexture.load(atmosphere),
@@ -316,6 +320,38 @@ function createPlanet(planetName, size, position, tilt, texture, bump, ring, atm
     Atmosphere.rotation.z = 0.41;
     planet.add(Atmosphere);
   }
+
+
+  function triggerLavaBurst(position) {
+    const particleCount = 100;
+    const particles = new THREE.BufferGeometry();
+    const positions = [];
+  
+    for (let i = 0; i < particleCount; i++) {
+      const x = position.x + (Math.random() - 0.5) * 2;
+      const y = position.y + (Math.random() - 0.5) * 2;
+      const z = position.z + (Math.random() - 0.5) * 2;
+      positions.push(x, y, z);
+    }
+  
+    particles.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  
+    const particleMaterial = new THREE.PointsMaterial({
+      color: 0xff4500,
+      size: 0.2,
+      transparent: true,
+      opacity: 0.8,
+    });
+  
+    const particleSystem = new THREE.Points(particles, particleMaterial);
+    scene.add(particleSystem);
+  
+    // Remove particles after some time
+    setTimeout(() => {
+      scene.remove(particleSystem);
+    }, 2000);
+  }
+  
 
   //add moons
   if(moons){
@@ -393,6 +429,7 @@ function loadAsteroids(path, numberOfAsteroids, minOrbitRadius, maxOrbitRadius) 
 }
 
 
+
 // Earth day/night effect shader material
 const earthMaterial = new THREE.ShaderMaterial({
   uniforms: {
@@ -433,6 +470,7 @@ const earthMaterial = new THREE.ShaderMaterial({
 });
 
 
+
 // ******  MOONS  ******
 // Earth
 const earthMoon = [{
@@ -453,6 +491,7 @@ const marsMoons = [
     position: 100,
     mesh: null
   },
+
   {
     modelPath: '/images/mars/deimos.glb',
     scale: 0.1,
@@ -654,9 +693,6 @@ saturn.Ring.receiveShadow = true;
 uranus.planet.receiveShadow = true;
 neptune.planet.receiveShadow = true;
 pluto.planet.receiveShadow = true;
-
-
-
 
 function animate(){
 

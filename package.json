@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
     "vite": "^4.5.0"
   },
   "dependencies": {
